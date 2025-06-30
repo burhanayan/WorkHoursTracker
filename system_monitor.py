@@ -23,10 +23,7 @@ class SystemMonitor:
         """Start system monitoring"""
         self.running = True
         self.log_login()
-        
-        # Monitor system events
-        self.monitoring_thread = threading.Thread(target=self._monitor_events, daemon=True)
-        self.monitoring_thread.start()
+        # No background thread - just log the initial login
         
     def stop_monitoring(self):
         """Stop system monitoring"""
@@ -85,23 +82,12 @@ class SystemMonitor:
         """Monitor system events in background"""
         while self.running:
             try:
-                # Check for system shutdown/sleep
-                if self._is_system_shutting_down():
-                    self.log_logout("Shutdown")
-                    break
-                    
-                # Check for system sleep/hibernate
-                if self._is_system_sleeping():
-                    self.log_logout("Sleep")
-                    # Wait for system to wake up
-                    self._wait_for_wake_up()
-                    self.log_login()
-                    
-                time.sleep(5)  # Check every 5 seconds
+                # Basic monitoring - simplified to avoid threading issues
+                time.sleep(30)  # Check every 30 seconds
                 
             except Exception as e:
                 print(f"Error in system monitoring: {e}")
-                time.sleep(10)
+                time.sleep(60)
                 
     def _is_system_shutting_down(self):
         """Check if system is shutting down"""

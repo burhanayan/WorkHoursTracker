@@ -4,7 +4,8 @@ Displays daily, weekly, monthly, and yearly statistics
 """
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+from tkcalendar import DateEntry
 from datetime import datetime, timedelta
 from database_operations import DatabaseOperations
 
@@ -48,11 +49,10 @@ class StatisticsGUI:
         date_frame.pack(fill=tk.X, padx=5, pady=5)
         
         ttk.Label(date_frame, text="Date:").pack(side=tk.LEFT)
-        self.daily_date_var = tk.StringVar(value=datetime.now().strftime("%Y-%m-%d"))
-        self.daily_date_entry = ttk.Entry(date_frame, textvariable=self.daily_date_var, width=12)
-        self.daily_date_entry.pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(date_frame, text="Load", command=self.load_daily_data).pack(side=tk.LEFT, padx=5)
+        self.daily_date_picker = DateEntry(date_frame, width=12, background='darkblue',
+                                         foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
+        self.daily_date_picker.pack(side=tk.LEFT, padx=5)
+        self.daily_date_picker.bind("<<DateEntrySelected>>", lambda e: self.load_daily_data())
         
         # Total hours label
         self.daily_total_label = ttk.Label(daily_frame, text="Daily Worked: 0hr 0min", font=("Arial", 12, "bold"))
@@ -78,11 +78,11 @@ class StatisticsGUI:
         days_since_start = (today.weekday() - week_start_day) % 7
         current_week_start = today - timedelta(days=days_since_start)
         
-        self.weekly_date_var = tk.StringVar(value=current_week_start.strftime("%Y-%m-%d"))
-        self.weekly_date_entry = ttk.Entry(week_frame, textvariable=self.weekly_date_var, width=12)
-        self.weekly_date_entry.pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(week_frame, text="Load", command=self.load_weekly_data).pack(side=tk.LEFT, padx=5)
+        self.weekly_date_picker = DateEntry(week_frame, width=12, background='darkblue',
+                                          foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
+        self.weekly_date_picker.set_date(current_week_start)
+        self.weekly_date_picker.pack(side=tk.LEFT, padx=5)
+        self.weekly_date_picker.bind("<<DateEntrySelected>>", lambda e: self.load_weekly_data())
         
         # Total hours label
         self.weekly_total_label = ttk.Label(weekly_frame, text="Weekly Worked: 0hr 0min", font=("Arial", 12, "bold"))
@@ -101,16 +101,24 @@ class StatisticsGUI:
         month_frame.pack(fill=tk.X, padx=5, pady=5)
         
         ttk.Label(month_frame, text="Year:").pack(side=tk.LEFT)
-        self.monthly_year_var = tk.StringVar(value=str(datetime.now().year))
-        self.monthly_year_entry = ttk.Entry(month_frame, textvariable=self.monthly_year_var, width=6)
-        self.monthly_year_entry.pack(side=tk.LEFT, padx=5)
+        current_year = datetime.now().year
+        years = [str(year) for year in range(current_year - 5, current_year + 2)]
+        self.monthly_year_var = tk.StringVar(value=str(current_year))
+        monthly_year_combo = ttk.Combobox(month_frame, textvariable=self.monthly_year_var, 
+                                        values=years, state="readonly", width=6)
+        monthly_year_combo.pack(side=tk.LEFT, padx=5)
+        monthly_year_combo.bind("<<ComboboxSelected>>", lambda e: self.load_monthly_data())
         
         ttk.Label(month_frame, text="Month:").pack(side=tk.LEFT, padx=(10, 0))
-        self.monthly_month_var = tk.StringVar(value=str(datetime.now().month))
-        self.monthly_month_entry = ttk.Entry(month_frame, textvariable=self.monthly_month_var, width=4)
-        self.monthly_month_entry.pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(month_frame, text="Load", command=self.load_monthly_data).pack(side=tk.LEFT, padx=5)
+        months = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
+        month_names = ["January", "February", "March", "April", "May", "June",
+                      "July", "August", "September", "October", "November", "December"]
+        month_display = [f"{i} - {name}" for i, name in zip(months, month_names)]
+        self.monthly_month_var = tk.StringVar(value=f"{datetime.now().month} - {month_names[datetime.now().month-1]}")
+        monthly_month_combo = ttk.Combobox(month_frame, textvariable=self.monthly_month_var,
+                                         values=month_display, state="readonly", width=15)
+        monthly_month_combo.pack(side=tk.LEFT, padx=5)
+        monthly_month_combo.bind("<<ComboboxSelected>>", lambda e: self.load_monthly_data())
         
         # Total hours label
         self.monthly_total_label = ttk.Label(monthly_frame, text="Monthly Worked: 0hr 0min", font=("Arial", 12, "bold"))
@@ -129,11 +137,13 @@ class StatisticsGUI:
         year_frame.pack(fill=tk.X, padx=5, pady=5)
         
         ttk.Label(year_frame, text="Year:").pack(side=tk.LEFT)
-        self.yearly_year_var = tk.StringVar(value=str(datetime.now().year))
-        self.yearly_year_entry = ttk.Entry(year_frame, textvariable=self.yearly_year_var, width=6)
-        self.yearly_year_entry.pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(year_frame, text="Load", command=self.load_yearly_data).pack(side=tk.LEFT, padx=5)
+        current_year = datetime.now().year
+        years = [str(year) for year in range(current_year - 5, current_year + 2)]
+        self.yearly_year_var = tk.StringVar(value=str(current_year))
+        yearly_year_combo = ttk.Combobox(year_frame, textvariable=self.yearly_year_var,
+                                       values=years, state="readonly", width=6)
+        yearly_year_combo.pack(side=tk.LEFT, padx=5)
+        yearly_year_combo.bind("<<ComboboxSelected>>", lambda e: self.load_yearly_data())
         
         # Total hours label
         self.yearly_total_label = ttk.Label(yearly_frame, text="Yearly Worked: 0hr 0min", font=("Arial", 12, "bold"))
@@ -162,15 +172,37 @@ class StatisticsGUI:
         tree.column("Type", width=100)
         tree.column("Duration", width=100)
         
-        # Scrollbars
+        # Scrollbars (auto-hide when not needed)
         v_scrollbar = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=tree.yview)
         h_scrollbar = ttk.Scrollbar(frame, orient=tk.HORIZONTAL, command=tree.xview)
+        
+        def on_tree_configure(event=None):
+            # Update scrollbar visibility
+            if tree.winfo_reqheight() > tree.winfo_height():
+                v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            else:
+                v_scrollbar.pack_forget()
+                
+            if tree.winfo_reqwidth() > tree.winfo_width():
+                h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+            else:
+                h_scrollbar.pack_forget()
+        
+        def on_v_scroll(*args):
+            tree.yview(*args)
+            on_tree_configure()
+            
+        def on_h_scroll(*args):
+            tree.xview(*args)
+            on_tree_configure()
+            
+        v_scrollbar.config(command=on_v_scroll)
+        h_scrollbar.config(command=on_h_scroll)
         tree.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
         
         # Pack everything
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        tree.bind('<Configure>', on_tree_configure)
         
         return tree
         
@@ -195,33 +227,34 @@ class StatisticsGUI:
     def load_daily_data(self):
         """Load daily data"""
         try:
-            date = datetime.strptime(self.daily_date_var.get(), "%Y-%m-%d").date()
+            date = self.daily_date_picker.get_date()
             sessions = self.db_ops.get_daily_sessions(date)
             total_hours = self.db_ops.get_daily_total_hours(date)
             self.populate_treeview(self.daily_tree, sessions, self.daily_total_label, total_hours)
-        except ValueError:
-            tk.messagebox.showerror("Error", "Invalid date format. Use YYYY-MM-DD")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load daily data: {str(e)}")
             
     def load_weekly_data(self):
         """Load weekly data"""
         try:
-            week_start = datetime.strptime(self.weekly_date_var.get(), "%Y-%m-%d").date()
+            week_start = self.weekly_date_picker.get_date()
             sessions = self.db_ops.get_weekly_sessions(week_start)
             total_hours = self.db_ops.get_weekly_total_hours(week_start)
             self.populate_treeview(self.weekly_tree, sessions, self.weekly_total_label, total_hours)
-        except ValueError:
-            tk.messagebox.showerror("Error", "Invalid date format. Use YYYY-MM-DD")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load weekly data: {str(e)}")
             
     def load_monthly_data(self):
         """Load monthly data"""
         try:
             year = int(self.monthly_year_var.get())
-            month = int(self.monthly_month_var.get())
+            month_text = self.monthly_month_var.get()
+            month = int(month_text.split(" - ")[0])  # Extract month number from "1 - January" format
             sessions = self.db_ops.get_monthly_sessions(year, month)
             total_hours = self.db_ops.get_monthly_total_hours(year, month)
             self.populate_treeview(self.monthly_tree, sessions, self.monthly_total_label, total_hours)
-        except ValueError:
-            tk.messagebox.showerror("Error", "Invalid year or month")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load monthly data: {str(e)}")
             
     def load_yearly_data(self):
         """Load yearly data"""
@@ -230,8 +263,8 @@ class StatisticsGUI:
             sessions = self.db_ops.get_yearly_sessions(year)
             total_hours = self.db_ops.get_yearly_total_hours(year)
             self.populate_treeview(self.yearly_tree, sessions, self.yearly_total_label, total_hours)
-        except ValueError:
-            tk.messagebox.showerror("Error", "Invalid year")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load yearly data: {str(e)}")
             
     def refresh_all_tabs(self):
         """Refresh all tabs with current data"""

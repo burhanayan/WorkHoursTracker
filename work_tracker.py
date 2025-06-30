@@ -58,6 +58,10 @@ class WorkTracker:
             self.settings_gui = SettingsGUI()
         self.settings_gui.show()
         
+    def manual_logout(self, icon, item):
+        """Manually log out current session"""
+        self.system_monitor.log_logout("Manual Logout")
+        
     def quit_application(self, icon, item):
         """Quit the application"""
         self.system_monitor.stop_monitoring()
@@ -70,6 +74,7 @@ class WorkTracker:
             pystray.MenuItem("Statistics", self.show_statistics),
             pystray.MenuItem("Settings", self.show_settings),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Manual Logout", self.manual_logout),
             pystray.MenuItem("Quit", self.quit_application)
         )
         
@@ -81,18 +86,11 @@ class WorkTracker:
             menu
         )
         
-        # Update tooltip periodically
-        def update_tooltip():
-            while True:
-                try:
-                    if self.tray_icon and self.tray_icon.visible:
-                        self.tray_icon.title = self.get_tray_tooltip()
-                    threading.Event().wait(60)  # Update every minute
-                except:
-                    break
-                    
-        tooltip_thread = threading.Thread(target=update_tooltip, daemon=True)
-        tooltip_thread.start()
+        # Set initial tooltip
+        try:
+            self.tray_icon.title = self.get_tray_tooltip()
+        except:
+            self.tray_icon.title = "Work Hours Tracker"
         
         # Run the tray icon
         self.tray_icon.run()
